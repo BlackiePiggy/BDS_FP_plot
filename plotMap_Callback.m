@@ -99,17 +99,27 @@ function plotMap_Callback(hObject, ~)
         [lat_raw, lon_raw] = xyz2lla(sat_pos.x*1000, sat_pos.y*1000, sat_pos.z*1000);
         
         if use_time_filter
-            % --- TIME-FILTERED LOGIC ---
             act_time_table = appdata.timeTableData;
             sat_rows = find(strcmp(act_time_table(:,1), sat));
             if isempty(sat_rows), continue; end
             
+            % --- 这是需要您确认或添加/修改的代码 ---
             t_original = linspace(0, 24*3600, length(lat_raw));
-            lon_unwrapped = unwrap(lon_raw*pi/180)*180/pi;
-            lat_interp = interp1(t_original, lat_raw, t_points, 'linear', 'extrap');
-            lon_interp = interp1(t_original, lon_unwrapped, t_points, 'linear', 'extrap');
+            sat_pos = sat_data.(sat);
+            
+            % 对 ECEF 坐标进行插值 (单位: 米)
+            ecef_x_interp = interp1(t_original, sat_pos.x*1000, t_points, 'linear', 'extrap');
+            ecef_y_interp = interp1(t_original, sat_pos.y*1000, t_points, 'linear', 'extrap');
+            ecef_z_interp = interp1(t_original, sat_pos.z*1000, t_points, 'linear', 'extrap');
+            ecef_interp_m = [ecef_x_interp; ecef_y_interp; ecef_z_interp];
+            
+            % 从插值后的 ECEF 坐标计算出用于绘图的经纬度
+            % (需要一个 ecef2lla 函数, 假设它存在)
+            [lat_interp, lon_interp, ~] = ecef2lla(ecef_interp_m(1,:), ecef_interp_m(2,:), ecef_interp_m(3,:));
+            % -----------------------------------------
             
             for k = 1:length(sat_rows)
+                % ... (计算 start_idx, end_idx, indices 的代码不变) ...
                 start_time = timestr2seconds(act_time_table{sat_rows(k), 2});
                 end_time = timestr2seconds(act_time_table{sat_rows(k), 3});
                 if start_time < 0 || end_time < 0, continue; end
@@ -125,14 +135,20 @@ function plotMap_Callback(hObject, ~)
                 end
                 if isempty(indices), continue; end
                 
+                % 使用插值后的经纬度进行绘图
                 h_track = plotm(lat_interp(indices), lon_interp(indices), '.', 'Color', colors(i,:), 'MarkerSize', 8);
+                
                 if k == 1
                     set(h_track, 'DisplayName', sat);
                     legendHandles(end+1) = h_track; legendLabels{end+1} = sat;
                 else
                     set(h_track, 'HandleVisibility', 'off');
                 end
-                set(h_track, 'UserData', struct('type','satellite','sat',sat,'times',{times_str_map(indices)}));
+
+                % --- 这是需要您确认或添加/修改的代码 ---
+                % 将对应时间段的 ECEF 坐标子集存入 UserData
+                set(h_track, 'UserData', struct('type','satellite','sat',sat,'times',{times_str_map(indices)},'ecef',ecef_interp_m(:, indices)));
+                % -----------------------------------------
             end
         else
             % --- FULL TRACK LOGIC ---
@@ -140,7 +156,12 @@ function plotMap_Callback(hObject, ~)
             legendHandles(end+1) = h_track;
             legendLabels{end+1} = sat;
             full_times = arrayfun(@seconds2timestr, linspace(0,86400,length(lat_raw)), 'UniformOutput', false);
-            set(h_track, 'UserData', struct('type','satellite','sat',sat,'times',{full_times}));
+
+            % --- 这是需要您确认或添加/修改的代码 ---
+            sat_pos = sat_data.(sat);
+            ecef_coords_m = [sat_pos.x*1000; sat_pos.y*1000; sat_pos.z*1000]; % 确保单位是米
+            set(h_track, 'UserData', struct('type','satellite','sat',sat,'times',{full_times},'ecef',ecef_coords_m));
+            % -----------------------------------------
         end
     end
     
