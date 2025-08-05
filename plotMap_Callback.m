@@ -55,11 +55,17 @@ function plotMap_Callback(hObject, ~)
         for i = 1:length(selected_stations)
             station = selected_stations(i);
             
+            % --- 修改开始 ---
             % Plot station marker
             h_st = plotm(station.llh(1), station.llh(2), 'mp', 'MarkerSize', 12, 'MarkerFaceColor', 'm', 'DisplayName', station.name);
+            
+            % 将完整的 station 对象存入 UserData，并手动添加一个 'type' 字段
+            station.type = 'station'; % 为我们的 switch-case 逻辑添加类型字段
+            set(h_st, 'UserData', station);
+            % --- 修改结束 ---
+
             legendHandles(end+1) = h_st;
             legendLabels{end+1} = station.name;
-            set(h_st, 'UserData', struct('type', 'station', 'name', station.name));
             
             % Plot visibility as a dark, semi-transparent filled circle
             [lat_c, lon_c] = scircle1(station.llh(1), station.llh(2), 75);
