@@ -1,5 +1,4 @@
 % createLayout.m
-% 负责创建和布局所有的UI组件，并设置它们的回调函数。
 function handles = createLayout(fig)
     % --- Menu setup ---
     fileMenu = uimenu(fig, 'Label', '文件');
@@ -20,10 +19,11 @@ function handles = createLayout(fig)
     % --- UI Element Sizing ---
     buttonWidth = min(150, panelWidth * 0.8); buttonHeight = 25;
     labelHeight = 20; fileStatusHeight = 30; verticalSpacing = 25;
+    editBoxHeight = 22;
     
     currentY = panelHeight - 35;
 
-    % --- File loading section ---
+    % --- File loading section (保持不变) ---
     uicontrol('Parent', controlPanel, 'Style', 'pushbutton', 'String', 'Load SP3 File', ...
         'Position', [20, currentY, buttonWidth, buttonHeight], 'Callback', @loadSP3File_Callback);
     currentY = currentY - fileStatusHeight;
@@ -49,7 +49,7 @@ function handles = createLayout(fig)
     stationFileText = uicontrol('Parent', controlPanel, 'Style', 'text', 'String', 'No station file loaded', ...
         'Position', [20, currentY, buttonWidth+50, fileStatusHeight], 'HorizontalAlignment', 'left');
     
-    % --- Satellite System Selection ---
+    % --- Satellite System Selection (保持不变) ---
     currentY = currentY - verticalSpacing;
     uicontrol('Parent', controlPanel, 'Style', 'text', 'String', 'Display Satellite Systems:', ...
         'Position', [20, currentY, buttonWidth, labelHeight], 'HorizontalAlignment', 'left');
@@ -59,17 +59,34 @@ function handles = createLayout(fig)
     bdsCheck = uicontrol('Parent', controlPanel, 'Style', 'checkbox', 'String', 'BDS (C)', ...
         'Position', [120, currentY, 80, labelHeight], 'Value', 1);
 
-    % --- Satellite and Station Selection Listboxes ---
-    listboxHeight = 120;
-    currentY = currentY - verticalSpacing - listboxHeight;
-    uicontrol('Parent', controlPanel, 'Style', 'text', 'String', 'Select Satellites to Plot:',...
-        'Position', [20, currentY + listboxHeight, buttonWidth, labelHeight], 'HorizontalAlignment', 'left');
+    % --- 【修改】卫星选择框部分 ---
+    listboxHeight = 100; % 稍微减小列表框高度以便为搜索框腾出空间
+    currentY = currentY - verticalSpacing;
+    uicontrol('Parent', controlPanel, 'Style', 'text', 'String', 'Search/Select Satellites:',...
+        'Position', [20, currentY, buttonWidth, labelHeight], 'HorizontalAlignment', 'left');
+    currentY = currentY - editBoxHeight - 2;
+    
+    % --- 【新增】卫星搜索框 ---
+    satelliteSearchBox = uicontrol('Parent', controlPanel, 'Style', 'edit', 'String', '', ...
+        'Position', [20, currentY, buttonWidth, editBoxHeight], 'HorizontalAlignment', 'left', ...
+        'Callback', @searchSatellites_Callback, 'Tag', 'satelliteSearchBox'); % 设置回调和Tag
+        
+    currentY = currentY - listboxHeight - 5;
     satelliteListBox = uicontrol('Parent', controlPanel, 'Style', 'listbox', 'String', {'Load SP3 File first'},...
         'Position', [20, currentY, buttonWidth, listboxHeight], 'Max', 2, 'Enable', 'off', 'Tag', 'satelliteListBox');
 
-    currentY = currentY - verticalSpacing - listboxHeight;
-    uicontrol('Parent', controlPanel, 'Style', 'text', 'String', 'Select Stations to Plot:',...
-        'Position', [20, currentY + listboxHeight, buttonWidth, labelHeight], 'HorizontalAlignment', 'left');
+    % --- 【修改】测站选择框部分 ---
+    currentY = currentY - verticalSpacing;
+    uicontrol('Parent', controlPanel, 'Style', 'text', 'String', 'Search/Select Stations:',...
+        'Position', [20, currentY, buttonWidth, labelHeight], 'HorizontalAlignment', 'left');
+    currentY = currentY - editBoxHeight - 2;
+    
+    % --- 【新增】测站搜索框 ---
+    stationSearchBox = uicontrol('Parent', controlPanel, 'Style', 'edit', 'String', '', ...
+        'Position', [20, currentY, buttonWidth, editBoxHeight], 'HorizontalAlignment', 'left', ...
+        'Callback', @searchStations_Callback, 'Tag', 'stationSearchBox'); % 设置回调和Tag
+        
+    currentY = currentY - listboxHeight - 5;
     stationListBox = uicontrol('Parent', controlPanel, 'Style', 'listbox', 'String', {'Load Station File first'},...
         'Position', [20, currentY, buttonWidth, listboxHeight], 'Max', 2, 'Enable', 'off', 'Tag', 'stationListBox');
 
@@ -84,7 +101,7 @@ function handles = createLayout(fig)
     mapAxes = axes('Parent', fig, 'Position', [0.3, 0.05, 0.68, 0.9]);
 
     % --- Store handles ---
-    handles = guihandles(fig); % Collect all handles with tags
+    handles = guihandles(fig); % 自动收集所有带Tag的句柄
     handles.fig = fig;
     handles.mapAxes = mapAxes;
     handles.sp3FileText = sp3FileText;
@@ -92,4 +109,5 @@ function handles = createLayout(fig)
     handles.stationFileText = stationFileText;
     handles.gpsCheck = gpsCheck;
     handles.bdsCheck = bdsCheck;
+    % 新的搜索框句柄已通过 guihandles 自动存入 handles 结构体
 end
