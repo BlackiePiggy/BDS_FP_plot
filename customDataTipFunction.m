@@ -14,7 +14,7 @@ function txt = customDataTipFunction(hObject, event_obj)
                 % 从 UserData 获取信息
                 times = userdata.times;
                 sat_name = userdata.sat;
-                sat_ecef_m = userdata.ecef(:, dataIndex); % 获取当前点的卫星ECEF坐标(米)
+                sat_ecef_m = userdata.ecef(:,dataIndex); % 获取当前点的卫星ECEF坐标(米)
                 
                 if iscell(times) && numel(times) >= dataIndex
                     time_str = times{dataIndex};
@@ -59,7 +59,7 @@ function txt = customDataTipFunction(hObject, event_obj)
                 
                 if ~isempty(elevation_info)
                     txt{end+1} = '--- Elevation Angles ---';
-                    txt = [txt; elevation_info'];
+                    txt = [txt, elevation_info'];
                 end
 
             case 'station'

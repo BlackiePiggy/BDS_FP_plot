@@ -111,7 +111,7 @@ function plotMap_Callback(hObject, ~)
             ecef_x_interp = interp1(t_original, sat_pos.x*1000, t_points, 'linear', 'extrap');
             ecef_y_interp = interp1(t_original, sat_pos.y*1000, t_points, 'linear', 'extrap');
             ecef_z_interp = interp1(t_original, sat_pos.z*1000, t_points, 'linear', 'extrap');
-            ecef_interp_m = [ecef_x_interp, ecef_y_interp, ecef_z_interp]';
+            ecef_interp_m = [ecef_x_interp; ecef_y_interp; ecef_z_interp];
             
             % 从插值后的 ECEF 坐标计算出用于绘图的经纬度
             % (需要一个 ecef2lla 函数, 假设它存在)
@@ -159,7 +159,7 @@ function plotMap_Callback(hObject, ~)
 
             % --- 这是需要您确认或添加/修改的代码 ---
             sat_pos = sat_data.(sat);
-            ecef_coords_m = [sat_pos.x*1000, sat_pos.y*1000, sat_pos.z*1000]'; % 确保单位是米
+            ecef_coords_m = [sat_pos.x*1000, sat_pos.y*1000, sat_pos.z*1000]; % 确保单位是米
             set(h_track, 'UserData', struct('type','satellite','sat',sat,'times',{full_times},'ecef',ecef_coords_m));
             % -----------------------------------------
         end
